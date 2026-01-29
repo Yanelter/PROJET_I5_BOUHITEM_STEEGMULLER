@@ -1,0 +1,40 @@
+/* --- Variables de Thèmes --- */
+:root {
+  /* Thème Clair (Défaut) */
+  --bg-primary: #f8f9fa;
+  --bg-secondary: #ffffff;
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --accent-color: #0d6efd;
+  --border-color: #dee2e6;
+  --input-bg: #ffffff;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme='sombre'] {
+  /* Thème Sombre */
+  --bg-primary: #121212;
+  --bg-secondary: #1e1e1e;
+  --text-primary: #e0e0e0;
+  --text-secondary: #a0a0a0;
+  --accent-color: #bb86fc;
+  --border-color: #333333;
+  --input-bg: #2d2d2d;
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  transition: background-color 0.3s, color 0.3s; /* Transition douce entre les thèmes */
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* Utilitaires */
+button { cursor: pointer; border: none; outline: none; }
+input { outline: none; }

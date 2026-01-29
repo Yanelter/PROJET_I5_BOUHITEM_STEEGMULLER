@@ -1,0 +1,138 @@
+.login_container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  padding: 20px;
+  background-color: var(--bg-primary);
+}
+
+.theme_toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 10px;
+  border-radius: 50%;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login_card {
+  background-color: var(--bg-secondary);
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  width: 100%;
+  max-width: 400px; /* Largeur max sur PC */
+  text-align: center;
+  border: 1px solid var(--border-color);
+}
+
+.subtitle {
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+  font-size: 0.9rem;
+}
+
+.input_group {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.input_group .icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+}
+
+.input_group input {
+  width: 100%;
+  padding: 12px 12px 12px 40px; /* Espace pour l'icône */
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.input_group input:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.2);
+}
+
+.login_btn {
+  width: 100%;
+  padding: 12px;
+  background-color: var(--accent-color);
+  color: white;
+  font-weight: bold;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: opacity 0.2s;
+}
+
+.login_btn:hover {
+  opacity: 0.9;
+}
+
+.error_message {
+  background-color: #ffebeb;
+  color: #d63301;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+}
+
+/* RESPONSIVE : Mobile (< 480px) */
+@media (max-width: 480px) {
+  .login_card {
+    padding: 1.5rem;
+    box-shadow: none; /* Plus plat sur mobile */
+    background: transparent; /* Fondre avec le fond */
+    border: none;
+  }
+}
+
+/* Messages */
+.message {
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+}
+.error_message {
+  background-color: #ffebeb;
+  color: #d63301;
+}
+.success_message {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+/* Zone de bascule (Toggle) */
+.toggle_container {
+  margin-top: 20px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 15px;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.toggle_link {
+  color: var(--accent-color);
+  font-weight: bold;
+  cursor: pointer;
+  margin-left: 5px;
+}
+
+.toggle_link:hover {
+  text-decoration: underline;
+}
