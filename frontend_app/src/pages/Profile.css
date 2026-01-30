@@ -1,0 +1,218 @@
+/* --- LAYOUT GLOBAL --- */
+.profile_container_centered {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+  padding: 40px 20px; /* Marge haut/bas et côté */
+  height: 100%;
+}
+
+.profile_card {
+  background-color: var(--bg-secondary);
+  width: 100%;
+  max-width: 550px; /* Largeur optimale pour un profil */
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+  transition: background-color 0.3s ease;
+}
+
+/* --- EN-TÊTE --- */
+.profile_header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.avatar_circle {
+  background: var(--accent-color);
+  color: white;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.profile_header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: var(--text-primary);
+}
+
+.user_email {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin: 5px 0 10px 0;
+}
+
+/* Badge Rôle */
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.role_admin {
+  background-color: #6610f2;
+  color: white;
+}
+
+.role_user {
+  background-color: var(--accent-color);
+  color: white;
+  opacity: 0.8;
+}
+
+.divider {
+  border: 0;
+  border-top: 1px solid var(--border-color);
+  margin: 25px 0;
+}
+
+/* --- BLOCS DE SECTION --- */
+.section_block {
+  margin-bottom: 20px;
+}
+
+.section_label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+/* Sélecteur et Inputs */
+.theme_select,
+.form_group input {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-primary); /* Contraste léger avec la carte */
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: border-color 0.2s;
+}
+
+.theme_select:focus,
+.form_group input:focus {
+  border-color: var(--accent-color);
+  outline: none;
+}
+
+/* --- ACCORDÉON MOT DE PASSE --- */
+.accordion_btn {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.accordion_btn:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* Animation d'ouverture */
+.accordion_content {
+  margin-top: 10px;
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background-color: var(--bg-primary);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.form_group {
+  margin-bottom: 15px;
+}
+
+.form_group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* --- BOUTONS D'ACTION --- */
+.validate_btn {
+  width: 100%;
+  padding: 12px;
+  background-color: #28a745; /* Vert succès */
+  color: white;
+  border-radius: 8px;
+  font-weight: bold;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  transition: opacity 0.2s;
+  font-size: 1rem;
+}
+
+.validate_btn:hover {
+  opacity: 0.9;
+}
+
+.logout_full_btn {
+  width: 100%;
+  padding: 14px;
+  background-color: #dc3545; /* Rouge danger */
+  color: white;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+  margin-top: 10px;
+}
+
+.logout_full_btn:hover {
+  background-color: #c82333;
+}
+
+/* --- MESSAGES D'ALERTE --- */
+.msg_box {
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  line-height: 1.4;
+}
+
+.msg_box.error {
+  background-color: #ffebeb;
+  color: #d63301;
+  border: 1px solid #f5c6cb;
+}
+
+.msg_box.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}

@@ -41,26 +41,51 @@
   border-radius: 4px;
 }
 
-/* RESPONSIVE TABLETTE & MOBILE */
+/* RESPONSIVE TABLETTE & MOBILE (< 768px) */
 @media (max-width: 768px) {
-  .app_container {
-    grid-template-columns: 1fr;
-    grid-template-rows: 60px auto 1fr;
-    grid-template-areas: 
-      "header"
-      "sidebar"
-      "main";
-  }
   
-  .left_side {
-    border-right: none;
-    border-bottom: 1px solid var(--border-color);
-    padding: 10px;
+  /* 1. On casse la grille pour simplifier */
+  .app_container {
+    display: block; 
+    height: 100vh;
+    overflow: hidden; /* On empêche le scroll sur le conteneur principal */
   }
 
-  .left_side ul {
+  /* 2. Le Header reste fixé en HAUT */
+  .header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    z-index: 20; /* Au-dessus du reste */
+  }
+
+  /* 3. Le Contenu Principal */
+  .main_content {
+    margin-top: 60px;      /* On laisse la place pour le header */
+    padding-bottom: 90px;  /* On laisse une grosse marge en bas pour ne pas que le texte soit caché par le menu */
+    height: 100vh;         /* Prend toute la hauteur */
+    overflow-y: auto;      /* C'est ICI que le scroll se fait */
+  }
+
+  /* 4. La Sidebar devient le MENU DU BAS */
+  .left_side {
+    position: fixed;       /* POSITION ABSOLUE SUR L'ÉCRAN */
+    bottom: 0;             /* COLLÉ EN BAS */
+    left: 0;
+    width: 100%;
+    height: 70px;
+    
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border-color); /* Juste une ligne au-dessus */
+    border-right: none;    /* Plus de bordure à droite */
+    
+    z-index: 100;          /* Tout au-dessus (plus haut que le header parfois) */
+    padding: 0;
+    
+    /* Pour centrer le contenu (géré ensuite par Sidebar.css) */
     display: flex;
-    gap: 15px;
-    list-style: none;
+    justify-content: center; 
   }
 }

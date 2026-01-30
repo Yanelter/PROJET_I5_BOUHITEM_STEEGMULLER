@@ -11,7 +11,7 @@
   --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-[data-theme='sombre'] {
+[data-theme='dark'] {
   /* Thème Sombre */
   --bg-primary: #121212;
   --bg-secondary: #1e1e1e;
