@@ -6,14 +6,13 @@ export default function LoginPage({ onLogin }) {
   const [isRegistering, setIsRegistering] = useState(false);
   
   const [identifier, setIdentifier] = useState(''); 
-  
-  // On renomme 'email' en 'loginInput' car cela peut être les deux
-  const [loginInput, setLoginInput] = useState(''); 
-  
+  const [loginInput, setLoginInput] = useState(''); // Email ou Identifiant
   const [password, setPassword] = useState('');
+  
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
+  // Gestion du thème au démarrage
   const [cssTheme, setCssTheme] = useState(localStorage.getItem('theme') || 'light');
 
   useEffect(() => {
@@ -36,13 +35,10 @@ export default function LoginPage({ onLogin }) {
     // Construction des données
     let payload;
     if (isRegistering) {
-        // Pour l'inscription, on a besoin de l'email spécifique (qui est dans loginInput)
-        // Note : Pour faire propre, lors de l'inscription, on demandera explicitement l'email.
-        // Ici, on assume que loginInput EST l'email lors de l'inscription pour simplifier,
-        // mais l'idéal serait d'avoir des champs séparés lors de l'inscription.
+        // Inscription : On envoie identifier + email + password
         payload = { identifier, email: loginInput, password };
     } else {
-        // Pour la connexion : on envoie 'login'
+        // Connexion : On envoie login + password
         payload = { login: loginInput, password };
     }
 
@@ -57,14 +53,24 @@ export default function LoginPage({ onLogin }) {
 
       if (response.ok) {
         if (isRegistering) {
+          // --- SUCCÈS INSCRIPTION ---
           setSuccessMsg("Compte créé avec succès ! Connectez-vous.");
           setIsRegistering(false);
           setPassword('');
         } else {
+          // --- SUCCÈS CONNEXION ---
+          
+          // 1. Appliquer le thème reçu de la base de données
+          // Le backend renvoie maintenant 'light' ou 'dark' directement via theme_css_value
           if (data.user.theme) {
-             const dbThemeToCss = data.user.theme === 'sombre' ? 'dark' : 'light';
-             setCssTheme(dbThemeToCss);
+             setCssTheme(data.user.theme);
           }
+
+          // 2. CRUCIAL : Sauvegarder l'utilisateur dans le navigateur
+          // Cela permet à Apps.jsx de vérifier le rôle Super Admin plus tard
+          localStorage.setItem('user_data', JSON.stringify(data.user));
+
+          // 3. Informer le composant parent (App.jsx)
           onLogin(data.user);
         }
       } else {
@@ -106,11 +112,9 @@ export default function LoginPage({ onLogin }) {
           )}
 
           <div className="input_group">
-            {/* L'icône change selon le mode */}
             {isRegistering ? <Mail className="icon" size={18} /> : <User className="icon" size={18} />}
             
             <input 
-              /* IMPORTANT : type="text" pour accepter un identifiant sans @ */
               type={isRegistering ? "email" : "text"} 
               placeholder={isRegistering ? "Email obligatoire" : "Email ou Identifiant"} 
               value={loginInput}

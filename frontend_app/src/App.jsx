@@ -1,69 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-
-// --- IMPORT DES PAGES ---
 import LoginPage from './pages/Login_Page';
 import Dashboard from './pages/Dashboard';
 import Zone from './pages/Zone';
 import Apps from './pages/Apps';
 import Alarms from './pages/Alarms';
 import Profile from './pages/Profile';
-
-// --- IMPORT DES COMPOSANTS ---
 import Sidebar from './components/Sidebar';
-
-// --- IMPORT CSS ---
 import './App.css';
 
 function App() {
-  const [user, setUser] = useState(null);
-  
-  // Gestion du thème global (récupère le choix précédent ou met 'light' par défaut)
+  // --- AMÉLIORATION ICI ---
+  // Au lieu de mettre null, on regarde si on était déjà connecté avant le rafraîchissement
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('user_data');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
 
-  // EFFET : Applique le thème sur le <body> à chaque changement
   useEffect(() => {
     document.body.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // Fonction passée au Profil pour changer le thème dynamiquement
-  const updateThemeInApp = (newCssValue) => {
-    setTheme(newCssValue);
-  };
-
-  // Fonction de déconnexion
-  const handleLogout = () => {
+  const updateThemeInApp = (newCssValue) => { setTheme(newCssValue); };
+  
+  const handleLogout = () => { 
     setUser(null);
+    localStorage.removeItem('user_data'); // On nettoie le stockage
   };
 
-  // --- VUE 1 : SI PAS CONNECTÉ ---
   if (!user) {
     return (
         <LoginPage 
             onLogin={(userData) => {
                 setUser(userData);
-                // Si l'utilisateur a un thème préféré en BDD, on l'applique tout de suite
-                if (userData.theme) {
-                    updateThemeInApp(userData.theme);
-                }
+                // On sauvegarde aussi ici (doublon de sécurité avec Login_Page)
+                localStorage.setItem('user_data', JSON.stringify(userData));
+                if (userData.theme) updateThemeInApp(userData.theme);
             }} 
         />
     );
   }
 
-  // --- VUE 2 : APPLICATION CONNECTÉE (ROUTER) ---
   return (
     <Router>
       <div className="app_container">
-        
-        {/* HEADER (Fixe en haut) */}
         <header className="header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-             {/* Titre ou Logo */}
              <h1 style={{ fontSize: '1.2rem' }}>HealthCheck360</h1>
           </div>
-          
           <div className="user_info">
             <span style={{ marginRight: '10px', fontSize: '0.9rem' }}>
               Bonjour, <strong>{user.identifier}</strong>
@@ -71,40 +58,28 @@ function App() {
           </div>
         </header>
         
-        {/* SIDEBAR (Menu Latéral Gauche) */}
-        {/* On passe le rôle pour savoir si on affiche "Alarmes" ou pas */}
-        <Sidebar role={user.role} />
+        <Sidebar user={user} />
 
-        {/* MAIN CONTENT (Zone centrale qui change) */}
         <main className="main_content">
           <Routes>
-            {/* Route par défaut (Accueil) */}
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/zone" element={<Zone user={user} />} />
             
-            {/* Pages accessibles à tous */}
-            <Route path="/zone" element={<Zone role={user.role} />} />
-            <Route path="/apps" element={<Apps />} />
+            {/* C'est ICI que ça fonctionne grâce à ton code : on passe user */}
+            <Route path="/apps" element={<Apps user={user}/>} />
             
-            {/* Route PROTÉGÉE pour les Alarmes (Admin uniquement) */}
             <Route path="/alarms" element={
-              user.role === 'admin' ? <Alarms /> : <Navigate to="/" />
+              user.permissions.admin ? <Alarms /> : <Navigate to="/" />
             } />
             
-            {/* Page Profil (avec props pour gérer logout et thème) */}
             <Route path="/profile" element={
-              <Profile 
-                user={user} 
-                logout={handleLogout} 
-                updateThemeInApp={updateThemeInApp}
-              />
+              <Profile user={user} logout={handleLogout} updateThemeInApp={updateThemeInApp} />
             } />
             
-            {/* Si l'URL n'existe pas, redirection vers Dashboard */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>
-
       </div>
     </Router>
   );

@@ -1,13 +1,15 @@
 import React from 'react';
 
-export default function Zone({ role }) {
+export default function Zone({ user }) {
+  const canConfig = user?.permissions?.write || user?.permissions?.admin;
+
   return (
     <div>
-      <h2>{role === 'admin' ? "Configuration des Zones" : "Lancer une ronde"}</h2>
+      <h2>{canConfig ? "Configuration des Zones" : "Lancer une ronde"}</h2>
       <p>
-        {role === 'admin' 
-          ? "Ajoutez, modifiez ou supprimez les zones de surveillance." 
-          : "Sélectionnez une zone pour débuter votre ronde de vérification."}
+        {canConfig 
+          ? "Ajoutez, modifiez ou supprimez les zones de surveillance (Mode Édition)." 
+          : "Sélectionnez une zone pour débuter votre ronde de vérification (Mode Lecture)."}
       </p>
     </div>
   );
