@@ -1,0 +1,52 @@
+.equip_container {
+    background-color: var(--bg-secondary);
+    padding: 20px;
+    border-radius: 10px;
+    height: 100%;
+    display: flex; flex-direction: column;
+}
+.equip_header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+.equip_layout { display: flex; gap: 20px; flex: 1; overflow: hidden; }
+
+/* SIDEBAR */
+.equip_sidebar {
+    width: 300px; min-width: 300px;
+    background: var(--bg-primary); padding: 20px;
+    border-radius: 8px; border: 1px solid var(--border-color);
+    overflow-y: auto;
+}
+.symbol_selector { display: flex; gap: 10px; align-items: center; }
+.symbol_selector select { flex: 1; }
+.icon_preview { 
+    width: 35px; height: 35px; background: var(--bg-secondary); 
+    display: flex; align-items: center; justify-content: center; 
+    border-radius: 5px; color: var(--accent-color);
+}
+.add_btn {
+    width: 100%; margin-top: 15px; padding: 10px;
+    background: var(--accent-color); color: white; 
+    border: none; border-radius: 5px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+
+/* LISTE */
+.equip_list_area { flex: 1; overflow-y: auto; padding-right: 5px; }
+.equip_grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; }
+.equip_card {
+    background: var(--bg-primary); border: 1px solid var(--border-color);
+    border-radius: 8px; padding: 15px;
+    display: flex; align-items: flex-start; gap: 15px; position: relative;
+}
+.card_icon { background: var(--bg-secondary); padding: 10px; border-radius: 50%; color: var(--text-primary); }
+.card_info h4 { margin: 0 0 5px 0; font-size: 1rem; }
+.card_meta .tag { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; background: #e9ecef; color: #333; }
+.card_meta .tag.bool { background: #d1e7dd; color: #0f5132; }
+.card_meta .tag.analog { background: #fff3cd; color: #664d03; }
+.card_comment { font-size: 0.8rem; color: var(--text-secondary); margin: 5px 0 0 0; font-style: italic;}
+.delete_mini_btn {
+    position: absolute; top: 10px; right: 10px;
+    background: none; border: none; color: var(--text-secondary);
+    cursor: pointer; padding: 5px;
+}
+.delete_mini_btn:hover { color: #dc3545; }
+.empty_state { color: var(--text-secondary); font-style: italic; }
