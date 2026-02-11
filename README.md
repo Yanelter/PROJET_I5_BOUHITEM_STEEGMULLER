@@ -12,7 +12,7 @@
 * ⚙️ Configuration
 * 📖 Guide d'Utilisation
 * 📂 Structure du Projet
-* 🔒 [Gestion des Rôles](https://github.com/Yanelter/PROJET_I5_BOUHITEM_STEEGMULLER/new/main?filename=README.md#-fonctionnalit%C3%A9s-cl%C3%A9s)
+* 🔒 Gestion des Rôles
 
 ---
 
@@ -39,7 +39,7 @@
 
 ### 🚨 Gestion des Alarmes
 
-* Remontée immédiate des équipements en défaut (`bool_value = 0`).
+* Remontée immédiate des équipements en défaut.
 * Vue centralisée des urgences.
 
 ---
@@ -91,9 +91,12 @@ Assurez-vous que les dossiers sensibles et lourds sont ignorés :
 
 ```text
 node_modules/
+dist/
+build/
 .env
-uploads_data/
+mariadb_data/
 .DS_Store
+uploads_data/
 
 ```
 
@@ -124,10 +127,10 @@ Une fois lancé :
 Créez un fichier `.env` à la racine (ou dans les dossiers respectifs si nécessaire) pour configurer la base de données :
 
 ```env
-DB_HOST=health_check_360_db
-DB_USER=user
-DB_PASSWORD=userpassword
-DB_NAME=health_check_360
+DB_HOST=votre_bdd_vsc
+DB_USER=votre_id
+DB_PASSWORD=votre_mdp
+DB_NAME=votre_bdd
 JWT_SECRET=votre_secret_tres_securise
 
 ```
@@ -138,7 +141,7 @@ JWT_SECRET=votre_secret_tres_securise
 
 ### 1. Première Connexion
 
-Un compte **Super Admin** doit être créé directement en base de données ou via la route d'inscription initiale pour configurer les premiers utilisateurs.
+Un compte **Super Admin** doit être créé directement en base de données ou via la route d'inscription initiale pour configurer les premiers utilisateurs. Si le compte **Super Admin** ne se crée pas, il suffit de modifier le rôle du premier utilisateur créé directement dans la BDD.
 
 ### 2. Workflow Typique
 
@@ -157,17 +160,29 @@ Un compte **Super Admin** doit être créé directement en base de données ou v
 ```bash
 HealthCheck360/
 ├── backend_api/            # API Node.js/Express
-│   ├── uploads/            # Stockage des images (Plans)
 │   ├── server.js           # Point d'entrée serveur & Routes
 │   ├── db.js               # Connexion BDD
-│   └── Dockerfile
+│   ├── package.json
+│   ├── package-lock.json
+│   ├── Dockerfile
+│   └── .dockerignore
 ├── frontend_app/           # Application React
 │   ├── src/
 │   │   ├── components/     # Composants réutilisables (Sidebar, Zooning...)
 │   │   ├── pages/          # Pages principales (Dashboard, Alarms, Rounds...)
+│   │   ├── main.jsx
 │   │   └── App.jsx         # Routing
-│   └── Dockerfile
+│   ├── Dockerfile
+│   ├── index.html
+│   ├── package.json
+│   ├── package-lock.json
+│   └── vite.config.js
+├── mariadb_init/           # Base de données
+│   └── init.sql            # Initialisation de la BDD au lancement
+├── uploads_data/
+│   └── plans/              # Stockage des images (Plans)
 ├── docker-compose.yml      # Orchestration des conteneurs
+├── .gitignore
 └── README.md
 
 ```
@@ -180,23 +195,12 @@ L'application gère des permissions granulaires basées sur `role_id` :
 
 | Rôle | ID | Permissions | Accès |
 | --- | --- | --- | --- |
-| **Invité** | 2 | Lecture seule | Dashboard (Ops), Profil |
+| **Lecteur** | 1 | Lecture seule | Dashboard (Ops), Profil |
+| **Lecteur Avancé** | 2 | Lecture & Export | Dashboard (Ops), Profil |
 | **Opérateur** | 3 | Exécution Rondes | Dashboard (Ops, Maint), Rondes, Historique |
 | **Admin** | 4 | Config, Écriture | Tout sauf gestion utilisateurs avancée |
 | **Super Admin** | 5 | Accès Total | Gestion Utilisateurs, Modification Rôles |
 
 ---
 
-## 🤝 Contribution
-
-Les contributions sont les bienvenues !
-
-1. Forkez le projet.
-2. Créez votre branche de fonctionnalité (`git checkout -b feature/AmazingFeature`).
-3. Committez vos changements (`git commit -m 'Add some AmazingFeature'`).
-4. Push sur la branche (`git push origin feature/AmazingFeature`).
-5. Ouvrez une Pull Request.
-
----
-
-*Développé avec ❤️ pour l'industrie 4.0*
+*Développé avec ❤️ par Yanel Bouhitem et Manon Steegmuller dans le cadre du projet de 5e année du cursus PAUC au sein de l'école ingénieure UniLaSalle Amiens.*
