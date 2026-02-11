@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import LoginPage from './pages/Login_Page';
 import Dashboard from './pages/Dashboard';
 import Zone from './pages/Zone';
+import CreateRound from './pages/CreateRound'; 
+import OperatorRounds from './pages/OperatorRounds'; // NOUVEAU IMPORT
 import Apps from './pages/Apps';
 import Alarms from './pages/Alarms';
 import Profile from './pages/Profile';
@@ -10,8 +12,6 @@ import Sidebar from './components/Sidebar';
 import './App.css';
 
 function App() {
-  // --- AMÉLIORATION ICI ---
-  // Au lieu de mettre null, on regarde si on était déjà connecté avant le rafraîchissement
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem('user_data');
     return savedUser ? JSON.parse(savedUser) : null;
@@ -28,7 +28,7 @@ function App() {
   
   const handleLogout = () => { 
     setUser(null);
-    localStorage.removeItem('user_data'); // On nettoie le stockage
+    localStorage.removeItem('user_data'); 
   };
 
   if (!user) {
@@ -36,7 +36,6 @@ function App() {
         <LoginPage 
             onLogin={(userData) => {
                 setUser(userData);
-                // On sauvegarde aussi ici (doublon de sécurité avec Login_Page)
                 localStorage.setItem('user_data', JSON.stringify(userData));
                 if (userData.theme) updateThemeInApp(userData.theme);
             }} 
@@ -65,8 +64,11 @@ function App() {
             <Route path="/" element={<Dashboard />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/zone" element={<Zone user={user} />} />
+            <Route path="/create-round" element={<CreateRound user={user} />} />
             
-            {/* C'est ICI que ça fonctionne grâce à ton code : on passe user */}
+            {/* NOUVELLE ROUTE OPÉRATEUR */}
+            <Route path="/operator-rounds" element={<OperatorRounds user={user} />} />
+
             <Route path="/apps" element={<Apps user={user}/>} />
             
             <Route path="/alarms" element={

@@ -1,0 +1,123 @@
+.zone_container {
+    display: flex;
+    height: 100%;
+    overflow: hidden;
+    position: relative; /* Pour le popup absolute */
+}
+
+/* SIDEBAR GAUCHE */
+.zone_sidebar {
+    width: 300px;
+    min-width: 300px;
+    background: var(--bg-primary);
+    border-right: 1px solid var(--border-color);
+    padding: 20px;
+    overflow-y: auto;
+    z-index: 2;
+}
+
+/* MAP AREA */
+.zone_map_area {
+    flex: 1;
+    background: #e5e5e5; /* Fond gris neutre pour le plan */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    overflow: auto;
+    position: relative;
+}
+
+.map_wrapper {
+    position: relative; /* Référentiel pour les points absolute */
+    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+    display: inline-block; /* S'adapte à la taille de l'image */
+    max-width: 95%;
+    max-height: 95%;
+}
+
+.map_image {
+    display: block;
+    max-width: 100%;
+    max-height: 80vh;
+    height: auto;
+    pointer-events: none; /* Empêche le drag natif de l'image */
+}
+
+/* LES POINTS (ÉQUIPEMENTS) */
+.map_item {
+    position: absolute;
+    transform: translate(-50%, -50%); /* Pour centrer le point sur les coordonnées */
+    cursor: pointer;
+    transition: transform 0.1s;
+    z-index: 10;
+}
+.map_item:hover { z-index: 20; }
+.map_item.selected { z-index: 21; }
+
+.icon_badge {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    border: 2px solid white;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.map_item.draggable { cursor: grab; }
+.map_item.draggable:active { cursor: grabbing; }
+
+/* Label au survol */
+.mini_label {
+    position: absolute;
+    bottom: 100%; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    margin-bottom: 5px;
+}
+.map_item:hover .mini_label { opacity: 1; }
+
+/* POPUP DETAILS */
+.item_details_card {
+    position: absolute;
+    top: 20px; right: 20px;
+    width: 280px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    z-index: 100;
+    animation: slideIn 0.2s ease-out;
+}
+@keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+.close_details {
+    position: absolute; top: 5px; right: 5px;
+    background: none; border: none; cursor: pointer; color: var(--text-secondary);
+}
+
+.details_header { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
+.subtext { font-size: 0.8rem; color: var(--text-secondary); }
+
+.details_actions { display: flex; gap: 10px; margin-top: 15px; }
+
+.action_btn {
+    flex: 1; padding: 8px; border-radius: 4px; border: none;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px;
+    font-size: 0.8rem;
+}
+.action_btn { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); }
+.action_btn.unlock { background: #ffc107; color: #333; border-color: #e0a800; }
+.action_btn.delete:hover { background: #ffebee; color: #d32f2f; border-color: #d32f2f; }
+
+.empty_map_state { color: #666; font-size: 1.2rem; margin-top: 50px; }

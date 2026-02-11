@@ -12,10 +12,10 @@ services:
       MYSQL_USER: user_app
       MYSQL_PASSWORD: user_password_securise
     ports:
-      - "3308:3306" # On mappe sur 3307 pour éviter les conflits si vous avez déjà MariaDB localement
+      - "3308:3306" # Mappé sur 3308 pour éviter les conflits locaux
     volumes:
-      - ./mariadb_data:/var/lib/mysql            # Sauvegarde des données
-      - ./mariadb_init/init.sql:/docker-entrypoint-initdb.d/init.sql # L'automatisation
+      - ./mariadb_data:/var/lib/mysql            # Persistance des données BDD
+      - ./mariadb_init/init.sql:/docker-entrypoint-initdb.d/init.sql # Script d'initialisation
 
   # Conteneur 2 : Backend (API)
   backend_api:
@@ -27,11 +27,14 @@ services:
     depends_on:
       - mariadb_db
     environment:
-      DB_HOST: mariadb_db # Le nom du service ci-dessus sert d'adresse IP
+      DB_HOST: mariadb_db
       DB_USER: user_app
       DB_PASSWORD: user_password_securise
       DB_NAME: health_check_360_db
       PORT: 5000
+    # --- AJOUT : Persistance des images uploadées ---
+    volumes:
+      - ./uploads_data:/app/uploads
 
   # Conteneur 3 : Frontend (Interface Utilisateur)
   frontend_app:
@@ -39,9 +42,8 @@ services:
     container_name: health_check_360_frontend
     restart: always
     ports:
-      - "3000:3000" # Les utilisateurs accéderont via http://IP_SERVEUR:3000
+      - "3000:3000"
     depends_on:
       - backend_api
     environment:
-      # Pour que le front sache où taper (l'URL sera celle du navigateur client)
       VITE_API_URL: http://localhost:5000

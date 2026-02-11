@@ -1,12 +1,16 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Map, Grid, Bell, User } from 'lucide-react';
+import { LayoutDashboard, Map, Grid, Bell, User, PlayCircle } from 'lucide-react';
 import './Sidebar.css';
 
 export default function Sidebar({ user }) {
-  // Raccourcis pour lisibilité
   const perms = user?.permissions || {};
-  const canWrite = perms.write || perms.admin; // Si on peut écrire ou qu'on est admin
+  // canWrite est true pour Admin (4) et SuperAdmin (5), false pour Operateur (3)
+  const canWrite = perms.write || perms.admin;
+  
+  const isOperatorOrAdmin = user.role_id >= 3;
+  const isOperator = user.role_id === 3;
+  const isAdmin = user.role_id >= 4;
 
   return (
     <aside className="left_side">
@@ -20,13 +24,25 @@ export default function Sidebar({ user }) {
             </NavLink>
           </li>
 
-          <li>
-            <NavLink to="/zone" className={({ isActive }) => isActive ? "nav_link active" : "nav_link"}>
-              <Map size={20} />
-              {/* Texte change selon permission d'écriture */}
-              <span>{canWrite ? "Configurer Zone" : "Lancer une ronde"}</span>
-            </NavLink>
-          </li>
+         {/* MODIFICATION ICI : On affiche ce lien UNIQUEMENT si on est Admin (canWrite) */}
+          {isAdmin && (
+            <li>
+                <NavLink to="/zone" className={({ isActive }) => isActive ? "nav_link active" : "nav_link"}>
+                <Map size={20} />
+                <span>Configurer Zone</span>
+                </NavLink>
+            </li>
+          )}
+
+          {/* Les opérateurs voient ça à la place */}
+          {isOperator && (
+            <li>
+                <NavLink to="/operator-rounds" className={({ isActive }) => isActive ? "nav_link active" : "nav_link"}>
+                    <PlayCircle size={20} />
+                    <span>Lancer une ronde</span>
+                </NavLink>
+            </li>
+          )}
 
           <li>
             <NavLink to="/apps" className={({ isActive }) => isActive ? "nav_link active" : "nav_link"}>
@@ -35,7 +51,6 @@ export default function Sidebar({ user }) {
             </NavLink>
           </li>
 
-          {/* Visible seulement si permission ADMIN */}
           {perms.admin && (
             <li>
               <NavLink to="/alarms" className={({ isActive }) => isActive ? "nav_link active" : "nav_link"}>

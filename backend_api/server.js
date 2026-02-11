@@ -67,7 +67,10 @@ app.post('/login', async (req, res) => {
     try {
         const query = `
             SELECT u.*, t.css_value as theme_css_value, r.name as role_name, 
-                   r.write, r.read, r.export, r.admin_rights
+                   r.can_write as "write", 
+                   r.can_read as "read", 
+                   r.can_export as "export", 
+                   r.admin_rights
             FROM users u 
             LEFT JOIN themes t ON u.theme_id = t.id 
             LEFT JOIN roles r ON u.role_id = r.id 
@@ -93,10 +96,24 @@ app.post('/login', async (req, res) => {
                 } 
             });
         } else { res.status(401).json({ error: "Mot de passe incorrect" }); }
-    } catch (err) { res.status(500).json({ error: "Erreur serveur" }); }
+    } catch (err) { 
+        console.error(err);
+        res.status(500).json({ error: "Erreur serveur" }); 
+    }
 });
 
-app.put('/user/password', async (req, res) => { /* Code password inchangé */ });
+app.put('/user/password', async (req, res) => {
+    const { userId, currentPassword, newPassword } = req.body;
+    try {
+        const [users] = await db.query('SELECT password_hash FROM users WHERE id = ?', [userId]);
+        if (users.length === 0) return res.status(404).json({ error: "Utilisateur introuvable" });
+        const match = await bcrypt.compare(currentPassword, users[0].password_hash);
+        if (!match) return res.status(401).json({ error: "Mot de passe incorrect" });
+        const newHash = await bcrypt.hash(newPassword, 10);
+        await db.query('UPDATE users SET password_hash = ? WHERE id = ?', [newHash, userId]);
+        res.json({ message: "Succès." });
+    } catch (err) { res.status(500).json({ error: "Erreur serveur" }); }
+});
 
 // --- ROUTES ADMIN ---
 app.get('/admin/users', async (req, res) => {
@@ -127,7 +144,7 @@ app.put('/admin/update-role', async (req, res) => {
     } catch (err) { res.status(500).json({ error: "Erreur serveur" }); }
 });
 
-// --- ROUTES ZOONING ---
+// --- ROUTES ZOONING (PLANS) ---
 app.post('/zooning/upload', upload.single('planImage'), async (req, res) => {
     const { name } = req.body;
     const file = req.file;
@@ -158,9 +175,7 @@ app.delete('/zooning/plan/:id', async (req, res) => {
     } catch (err) { res.status(500).json({ error: "Erreur suppression." }); }
 });
 
-// --- ROUTES ÉQUIPEMENTS (NOUVEAU) ---
-
-// 1. Récupérer tous
+// --- ROUTES TYPES D'ÉQUIPEMENTS ---
 app.get('/equipements', async (req, res) => {
     try {
         const [rows] = await db.query('SELECT * FROM type_equipements ORDER BY id DESC');
@@ -168,25 +183,218 @@ app.get('/equipements', async (req, res) => {
     } catch (err) { res.status(500).json({ error: "Erreur serveur" }); }
 });
 
-// 2. Créer
 app.post('/equipements', async (req, res) => {
     const { name, equipement_val, symbol, comment } = req.body;
     if (!name || !symbol) return res.status(400).json({ error: "Nom et Symbole requis." });
     try {
         await db.query(
             'INSERT INTO type_equipements (name, equipement_val, symbol, comment) VALUES (?, ?, ?, ?)',
-            [name, equipement_val || 'bool', symbol, comment]
+            [name, equipement_val || 'binary', symbol, comment]
         );
         res.status(201).json({ message: "Équipement créé." });
-    } catch (err) { res.status(500).json({ error: "Erreur création." }); }
+    } catch (err) { 
+        console.error(err);
+        res.status(500).json({ error: "Erreur création." }); 
+    }
 });
 
-// 3. Supprimer
 app.delete('/equipements/:id', async (req, res) => {
     try {
         await db.query('DELETE FROM type_equipements WHERE id = ?', [req.params.id]);
         res.json({ message: "Équipement supprimé." });
     } catch (err) { res.status(500).json({ error: "Erreur suppression." }); }
+});
+
+// --- ROUTES TERRAIN (INSTANCES SUR PLAN) ---
+app.get('/terrain/plan/:planId', async (req, res) => {
+    try {
+        const query = `
+            SELECT t.*, type.symbol, type.name as type_name, type.equipement_val
+            FROM equipements_terrain t
+            JOIN type_equipements type ON t.type_equipements_id = type.id
+            WHERE t.plans_id = ?
+        `;
+        const [rows] = await db.query(query, [req.params.planId]);
+        res.json(rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur récupération terrain" });
+    }
+});
+
+app.post('/terrain', async (req, res) => {
+    const { name, plans_id, type_equipements_id, zone, comment } = req.body;
+    if (!name || !plans_id || !type_equipements_id) {
+        return res.status(400).json({ error: "Champs obligatoires manquants." });
+    }
+    try {
+        await db.query(
+            `INSERT INTO equipements_terrain 
+            (name, plans_id, type_equipements_id, zone, comment, x_axis, y_axis) 
+            VALUES (?, ?, ?, ?, ?, 50, 50)`,
+            [name, plans_id, type_equipements_id, zone, comment]
+        );
+        res.status(201).json({ message: "Équipement placé sur le plan." });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur création." });
+    }
+});
+
+app.put('/terrain/:id/position', async (req, res) => {
+    const { x, y } = req.body;
+    try {
+        await db.query(
+            'UPDATE equipements_terrain SET x_axis = ?, y_axis = ? WHERE id = ?',
+            [x, y, req.params.id]
+        );
+        res.json({ message: "Position sauvegardée." });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur déplacement." });
+    }
+});
+
+app.delete('/terrain/:id', async (req, res) => {
+    try {
+        await db.query('DELETE FROM equipements_terrain WHERE id = ?', [req.params.id]);
+        res.json({ message: "Supprimé." });
+    } catch (err) { res.status(500).json({ error: "Erreur suppression" }); }
+});
+
+// --- ROUTES POUR LES RONDES (ADMIN) ---
+
+app.get('/users/operators', async (req, res) => {
+    try {
+        const [rows] = await db.query('SELECT id, identifier, email FROM users WHERE role_id = 3');
+        res.json(rows);
+    } catch (err) { res.status(500).json({ error: "Erreur récupération opérateurs" }); }
+});
+
+app.get('/terrain/all-details', async (req, res) => {
+    try {
+        const query = `
+            SELECT t.id, t.name, t.zone, p.name as plan_name, type.symbol
+            FROM equipements_terrain t
+            JOIN plans p ON t.plans_id = p.id
+            JOIN type_equipements type ON t.type_equipements_id = type.id
+            ORDER BY p.name, t.zone
+        `;
+        const [rows] = await db.query(query);
+        res.json(rows);
+    } catch (err) { res.status(500).json({ error: "Erreur récupération global terrain" }); }
+});
+
+app.post('/rondes', async (req, res) => {
+    const { name, operator_id, creator_id, scheduled_date, equipments_ids } = req.body;
+    if (!name || !operator_id || !scheduled_date) return res.status(400).json({ error: "Champs manquants" });
+
+    try {
+        await db.query(
+            `INSERT INTO demande_rondes (name, operator_id, creator_id, scheduled_date, target_equipments_ids) 
+             VALUES (?, ?, ?, ?, ?)`,
+            [name, operator_id, creator_id, scheduled_date, JSON.stringify(equipments_ids)]
+        );
+        res.status(201).json({ message: "Ronde créée avec succès !" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur création ronde" });
+    }
+});
+
+// --- ROUTES OPÉRATEUR (EXECUTION RONDES) ---
+
+app.get('/rondes/assigned/:userId', async (req, res) => {
+    try {
+        const query = `
+            SELECT r.*, u.identifier as creator_name
+            FROM demande_rondes r
+            JOIN users u ON r.creator_id = u.id
+            WHERE r.operator_id = ? AND r.status != 'completed'
+            ORDER BY r.scheduled_date ASC
+        `;
+        const [rows] = await db.query(query, [req.params.userId]);
+        res.json(rows);
+    } catch (err) { 
+        console.error(err);
+        res.status(500).json({ error: "Erreur récupération rondes" }); 
+    }
+});
+
+app.get('/rondes/:id/details', async (req, res) => {
+    try {
+        const [ronde] = await db.query('SELECT target_equipments_ids FROM demande_rondes WHERE id = ?', [req.params.id]);
+        
+        if (ronde.length === 0) return res.status(404).json({ error: "Ronde introuvable" });
+        
+        let idsRaw = ronde[0].target_equipments_ids;
+        let ids = [];
+
+        // Parsing JSON sécurisé
+        if (Array.isArray(idsRaw)) {
+            ids = idsRaw;
+        } else if (typeof idsRaw === 'string') {
+            try {
+                ids = JSON.parse(idsRaw);
+            } catch (e) {
+                console.error("Erreur parsing JSON IDs:", e);
+                return res.status(500).json({ error: "Données corrompues" });
+            }
+        }
+        
+        if (!ids || ids.length === 0) return res.json([]);
+
+        const query = `
+            SELECT t.id, t.name, t.zone, type.symbol, type.equipement_val
+            FROM equipements_terrain t
+            JOIN type_equipements type ON t.type_equipements_id = type.id
+            WHERE t.id IN (?)
+            ORDER BY t.zone
+        `;
+        const [equipments] = await db.query(query, [ids]);
+        res.json(equipments);
+    } catch (err) { 
+        console.error(err);
+        res.status(500).json({ error: "Erreur détails ronde" }); 
+    }
+});
+
+// 3. Soumettre le rapport de ronde ET mettre à jour les équipements
+app.post('/rondes/:id/submit', async (req, res) => {
+    const roundId = req.params.id;
+    const { operator_id, report_data, etat } = req.body;
+
+    try {
+        // 1. Sauvegarder le rapport (Archive)
+        await db.query(
+            `INSERT INTO rapport_rondes (demande_ronde_id, operator_id, report_data, etat) 
+             VALUES (?, ?, ?, ?)`,
+            [roundId, operator_id, JSON.stringify(report_data), etat || 'valide']
+        );
+
+        // 2. Mettre à jour le statut de la ronde
+        await db.query('UPDATE demande_rondes SET status = "completed" WHERE id = ?', [roundId]);
+
+        // --- NOUVEAU : MISE À JOUR DES ÉQUIPEMENTS ---
+        // On boucle sur chaque résultat pour mettre à jour la table equipements_terrain
+        for (const item of report_data) {
+            // item contient { id, status, value, comment } venant du frontend
+            
+            const boolVal = item.status === '1' ? 1 : 0;
+            const analogVal = item.value ? parseFloat(item.value) : null;
+            const commentVal = item.comment || null;
+
+            await db.query(
+                'UPDATE equipements_terrain SET bool_value = ?, analog_value = ?, comment = ? WHERE id = ?',
+                [boolVal, analogVal, commentVal, item.id]
+            );
+        }
+
+        res.json({ message: "Rapport enregistré et équipements mis à jour." });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur enregistrement rapport" });
+    }
 });
 
 const PORT = process.env.PORT || 5000;

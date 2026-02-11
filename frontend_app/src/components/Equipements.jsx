@@ -31,7 +31,7 @@ export default function Equipements({ onClose }) {
 
   const [form, setForm] = useState({
       name: '',
-      equipement_val: 'bool',
+      equipement_val: 'binary',
       symbol: 'Lightbulb',
       comment: ''
   });
@@ -62,7 +62,7 @@ export default function Equipements({ onClose }) {
               body: JSON.stringify(form)
           });
           if (res.ok) {
-              setForm({ name: '', equipement_val: 'bool', symbol: 'Lightbulb', comment: '' });
+              setForm({ name: '', equipement_val: 'binary', symbol: 'Lightbulb', comment: '' });
               fetchEquipements();
           }
       } catch (err) { console.error(err); }
@@ -94,7 +94,7 @@ export default function Equipements({ onClose }) {
                             value={form.equipement_val} 
                             onChange={e => setForm({...form, equipement_val: e.target.value})}
                         >
-                            <option value="bool">Tout ou Rien (On/Off)</option>
+                            <option value="binary">Tout ou Rien (On/Off)</option>
                             <option value="analog">Analogique (0-100%)</option>
                         </select>
                     </div>
@@ -134,7 +134,7 @@ export default function Equipements({ onClose }) {
                                 <h4>{item.name}</h4>
                                 <div className="card_meta">
                                     <span className={`tag ${item.equipement_val}`}>
-                                        {item.equipement_val === 'bool' ? 'On/Off' : 'Analogique'}
+                                        {item.equipement_val === 'binary' ? 'On/Off' : 'Analogique'}
                                     </span>
                                 </div>
                                 {item.comment && <p className="card_comment">{item.comment}</p>}

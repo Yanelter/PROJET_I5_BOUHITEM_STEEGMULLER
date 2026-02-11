@@ -1,0 +1,75 @@
+.create_round_container {
+    height: 100vh; display: flex; flex-direction: column;
+    background-color: #f3f4f6; color: var(--text-primary);
+}
+
+/* HEADER */
+.cr_header {
+    padding: 15px 25px; background: var(--bg-primary); border-bottom: 1px solid var(--border-color);
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05); z-index: 10;
+}
+.cr_header h2 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 1.2rem; }
+
+.header_save_btn {
+    background-color: var(--accent-color); color: white; border: none; padding: 10px 20px;
+    border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;
+    transition: transform 0.1s;
+}
+.header_save_btn:hover { transform: scale(1.02); opacity: 0.9; }
+
+/* LAYOUT GLOBAL */
+.cr_content { display: flex; flex: 1; overflow: hidden; }
+
+/* SIDEBAR GAUCHE FIXE */
+.cr_sidebar {
+    width: 300px; min-width: 300px; padding: 25px; background: var(--bg-primary); border-right: 1px solid var(--border-color);
+    display: flex; flex-direction: column; gap: 20px; z-index: 2;
+}
+.summary_box {
+    background: #eef2ff; border: 1px solid #c7d2fe; padding: 20px; border-radius: 12px;
+    text-align: center; margin-top: auto;
+}
+.big_number { font-size: 2.5rem; font-weight: bold; color: var(--accent-color); line-height: 1; margin: 5px 0; }
+
+/* ZONE DROITE (SCROLLABLE) */
+.cr_selection_area { flex: 1; padding: 30px; overflow-y: auto; background-color: #f8fafc; }
+
+/* SECTIONS PLAN */
+.plan_section { margin-bottom: 40px; }
+.plan_title { 
+    font-size: 1.4rem; color: var(--text-primary); margin-bottom: 15px; 
+    display: flex; align-items: center; gap: 10px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;
+}
+
+/* GRILLE DES ZONES */
+.zones_grid_layout {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;
+}
+
+/* CARTE DE ZONE */
+.zone_wrapper {
+    background: white; border-radius: 8px; border: 1px solid #e2e8f0; 
+    overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; flex-direction: column;
+}
+
+/* HEADER DE LA ZONE (CLIQUABLE POUR TOUT COCHER) */
+.zone_header {
+    background: #f1f5f9; padding: 12px 15px; border-bottom: 1px solid #e2e8f0;
+    display: flex; justify-content: space-between; align-items: center; cursor: pointer;
+    transition: background 0.2s; user-select: none;
+}
+.zone_header:hover { background: #e2e8f0; }
+.zone_name_group { display: flex; align-items: center; gap: 10px; font-weight: 600; color: #334155; }
+.count_badge { background: #cbd5e1; color: #475569; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; }
+
+/* LISTE DES ITEMS DANS LA ZONE */
+.zone_items_list { padding: 10px; display: flex; flex-direction: column; gap: 5px; }
+
+.item_row {
+    display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 4px;
+    cursor: pointer; transition: background 0.1s; color: #475569; font-size: 0.9rem;
+}
+.item_row:hover { background: #f8fafc; }
+.item_row.checked { background: #eff6ff; color: #1e293b; font-weight: 500; }
+.item_row input[type="checkbox"] { accent-color: var(--accent-color); width: 16px; height: 16px; }
