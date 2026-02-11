@@ -375,11 +375,8 @@ app.post('/rondes/:id/submit', async (req, res) => {
         // 2. Mettre à jour le statut de la ronde
         await db.query('UPDATE demande_rondes SET status = "completed" WHERE id = ?', [roundId]);
 
-        // --- NOUVEAU : MISE À JOUR DES ÉQUIPEMENTS ---
-        // On boucle sur chaque résultat pour mettre à jour la table equipements_terrain
+        // 3. MISE À JOUR DES ÉQUIPEMENTS
         for (const item of report_data) {
-            // item contient { id, status, value, comment } venant du frontend
-            
             const boolVal = item.status === '1' ? 1 : 0;
             const analogVal = item.value ? parseFloat(item.value) : null;
             const commentVal = item.comment || null;
@@ -394,6 +391,194 @@ app.post('/rondes/:id/submit', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Erreur enregistrement rapport" });
+    }
+});
+
+// --- ROUTES HISTORIQUE & MODIFICATION ---
+
+// 1. Récupérer tout l'historique des rapports
+app.get('/reports', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                rr.id, rr.etat, rr.executed_at, rr.report_data,
+                dr.name as round_name, dr.scheduled_date, dr.id as demande_id,
+                u_op.identifier as operator_name, u_op.id as operator_id,
+                u_creator.identifier as creator_name
+            FROM rapport_rondes rr
+            JOIN demande_rondes dr ON rr.demande_ronde_id = dr.id
+            JOIN users u_op ON rr.operator_id = u_op.id
+            JOIN users u_creator ON dr.creator_id = u_creator.id
+            ORDER BY rr.executed_at DESC
+        `;
+        const [rows] = await db.query(query);
+        res.json(rows);
+    } catch (err) { res.status(500).json({ error: "Erreur historique" }); }
+});
+
+// 2. Modifier un rapport (Obsolète -> Nouveau)
+app.post('/reports/modify', async (req, res) => {
+    const { old_report_id, demande_id, operator_id, new_report_data, modifier_id } = req.body;
+
+    try {
+        // A. Passer l'ancien rapport en 'obsolete'
+        await db.query('UPDATE rapport_rondes SET etat = "obsolete" WHERE id = ?', [old_report_id]);
+
+        // B. Créer le nouveau rapport en 'modifie'
+        const [result] = await db.query(
+            `INSERT INTO rapport_rondes (demande_ronde_id, operator_id, report_data, etat) 
+             VALUES (?, ?, ?, "modifie")`,
+            [demande_id, operator_id, JSON.stringify(new_report_data)]
+        );
+
+        // C. Mettre à jour les équipements sur le terrain
+        for (const item of new_report_data) {
+            const boolVal = item.status === '1' ? 1 : 0;
+            const analogVal = item.value ? parseFloat(item.value) : null;
+            const commentVal = item.comment || null;
+
+            await db.query(
+                'UPDATE equipements_terrain SET bool_value = ?, analog_value = ?, comment = ? WHERE id = ?',
+                [boolVal, analogVal, commentVal, item.id]
+            );
+        }
+
+        res.json({ message: "Rapport modifié avec succès." });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur modification" });
+    }
+});
+
+// --- ROUTES DASHBOARD (KPIs) --- [NOUVEAU]
+
+// 1. KPI OPÉRATIONNELS
+app.get('/dashboard/operational', async (req, res) => {
+    try {
+        const [alarms] = await db.query('SELECT COUNT(*) as count FROM equipements_terrain WHERE bool_value = 0');
+        const [pending] = await db.query('SELECT COUNT(*) as count FROM demande_rondes WHERE status != "completed"');
+        const [totalEquip] = await db.query('SELECT COUNT(*) as count FROM equipements_terrain');
+        const [todayRounds] = await db.query('SELECT COUNT(*) as count FROM demande_rondes WHERE scheduled_date = CURRENT_DATE');
+
+        // Calcul disponibilité
+        const activeCount = totalEquip[0].count - alarms[0].count;
+        const availability = totalEquip[0].count > 0 ? ((activeCount / totalEquip[0].count) * 100).toFixed(1) : 100;
+
+        res.json({
+            alarms: alarms[0].count,
+            pending_rounds: pending[0].count,
+            availability: availability,
+            today_rounds: todayRounds[0].count,
+            total_equipments: totalEquip[0].count
+        });
+    } catch (err) { res.status(500).json({ error: "Erreur KPI Ops" }); }
+});
+
+// 2. KPI MAINTENANCE
+app.get('/dashboard/maintenance', async (req, res) => {
+    try {
+        // Top 5 Zones critiques
+        const [topZones] = await db.query(`
+            SELECT CONCAT(p.name, ' - ', t.zone) as label, COUNT(*) as count 
+            FROM equipements_terrain t
+            JOIN plans p ON t.plans_id = p.id
+            WHERE t.bool_value = 0
+            GROUP BY p.name, t.zone
+            ORDER BY count DESC
+            LIMIT 5
+        `);
+
+        // Répartition par Type
+        const [defectsByType] = await db.query(`
+            SELECT type.name as label, COUNT(*) as count
+            FROM equipements_terrain t
+            JOIN type_equipements type ON t.type_equipements_id = type.id
+            WHERE t.bool_value = 0
+            GROUP BY type.name
+        `);
+
+        res.json({ topZones, defectsByType });
+    } catch (err) { res.status(500).json({ error: "Erreur KPI Maint" }); }
+});
+
+// 3. KPI PERFORMANCE (Admin +) - MODIFIÉ
+app.get('/dashboard/performance', async (req, res) => {
+    try {
+        // A. Taux de réalisation (Excluant les obsolètes)
+        // On compte le nombre de demandes qui ont au moins un rapport VALIDE ou MODIFIE (pas obsolete)
+        const [validRounds] = await db.query(`
+            SELECT COUNT(DISTINCT demande_ronde_id) as count 
+            FROM rapport_rondes 
+            WHERE etat != 'obsolete'
+        `);
+        
+        const [totalRounds] = await db.query('SELECT COUNT(*) as count FROM demande_rondes');
+        
+        const completionRate = totalRounds[0].count > 0 
+            ? ((validRounds[0].count / totalRounds[0].count) * 100).toFixed(1) 
+            : 0;
+
+        // B. Activité par Opérateur (Excluant les obsolètes)
+        const [operatorActivity] = await db.query(`
+            SELECT u.identifier as label, COUNT(*) as count
+            FROM rapport_rondes r
+            JOIN users u ON r.operator_id = u.id
+            WHERE r.etat != 'obsolete'
+            GROUP BY u.identifier
+            ORDER BY count DESC
+            LIMIT 5
+        `);
+
+        // C. Retard Moyen par Opérateur (NOUVEAU)
+        // DATEDIFF renvoie le nombre de jours. Si négatif = en avance, positif = en retard.
+        const [avgDelay] = await db.query(`
+            SELECT 
+                u.identifier as label, 
+                CAST(AVG(DATEDIFF(r.executed_at, dr.scheduled_date)) AS DECIMAL(10,1)) as avg_days
+            FROM rapport_rondes r
+            JOIN demande_rondes dr ON r.demande_ronde_id = dr.id
+            JOIN users u ON r.operator_id = u.id
+            WHERE r.etat != 'obsolete'
+            GROUP BY u.identifier
+            ORDER BY avg_days DESC
+        `);
+
+        res.json({ 
+            completionRate, 
+            totalRounds: totalRounds[0].count, 
+            operatorActivity,
+            avgDelay // On renvoie la nouvelle donnée
+        });
+    } catch (err) { 
+        console.error(err);
+        res.status(500).json({ error: "Erreur KPI Perf" }); 
+    }
+});
+
+// --- ROUTE ALARMES (Équipements en défaut) ---
+app.get('/alarms/active', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                t.id, 
+                t.name, 
+                t.zone, 
+                t.comment, 
+                t.bool_value,
+                p.name as plan_name,
+                type.name as type_name,
+                type.symbol
+            FROM equipements_terrain t
+            JOIN plans p ON t.plans_id = p.id
+            JOIN type_equipements type ON t.type_equipements_id = type.id
+            WHERE t.bool_value = 0
+            ORDER BY p.name, t.zone
+        `;
+        const [rows] = await db.query(query);
+        res.json(rows);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Erreur récupération alarmes" });
     }
 });
 

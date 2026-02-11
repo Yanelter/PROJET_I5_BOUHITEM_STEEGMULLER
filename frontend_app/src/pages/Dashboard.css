@@ -1,0 +1,129 @@
+.dashboard_container {
+    padding: 20px;
+    background-color: var(--bg-secondary);
+    height: 100%;
+    overflow-y: auto;
+    color: var(--text-primary);
+}
+
+/* --- TABS --- */
+.dashboard_tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.tab_btn {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 1rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.tab_btn:hover { background-color: var(--bg-primary); }
+
+.tab_btn.active {
+    background-color: var(--accent-color);
+    color: white;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+/* --- GRIDS --- */
+.kpi_grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.charts_grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+}
+
+/* --- KPI CARD --- */
+.kpi_card {
+    background: var(--bg-primary);
+    padding: 25px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: var(--shadow);
+    border-left: 5px solid transparent;
+}
+
+.kpi_icon { padding: 15px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.kpi_content { display: flex; flex-direction: column; }
+.kpi_value { font-size: 2.2rem; font-weight: bold; line-height: 1; margin-bottom: 5px; }
+.kpi_title { font-size: 1rem; font-weight: 600; color: var(--text-primary); }
+.kpi_sub { font-size: 0.85rem; color: var(--text-secondary); }
+
+/* Couleurs dynamiques */
+.border-red { border-color: #ef4444; }
+.bg-red { background-color: #fee2e2; color: #ef4444; }
+.txt-red { color: #ef4444; }
+
+.border-green { border-color: #10b981; }
+.bg-green { background-color: #d1fae5; color: #10b981; }
+.txt-green { color: #10b981; }
+
+.border-orange { border-color: #f97316; }
+.bg-orange { background-color: #ffedd5; color: #f97316; }
+.txt-orange { color: #f97316; }
+
+.border-blue { border-color: #3b82f6; }
+.bg-blue { background-color: #dbeafe; color: #3b82f6; }
+.txt-blue { color: #3b82f6; }
+
+/* --- CHART CARD --- */
+.chart_card {
+    background: var(--bg-primary);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+}
+
+.chart_card h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
+
+.chart_wrapper { height: 300px; position: relative; width: 100%; display: flex; justify-content: center; }
+.chart_wrapper.donut { max-width: 400px; margin: 0 auto; }
+
+.empty_msg { color: var(--text-secondary); font-style: italic; margin-top: 50px; text-align: center; }
+
+/* Jauge custom */
+.gauge_container { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding-bottom: 20px; }
+.gauge_circle {
+    width: 180px; height: 180px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; margin-bottom: 15px;
+}
+.gauge_inner {
+    width: 140px; height: 140px; background: var(--bg-primary); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.5rem; font-weight: bold; color: var(--text-primary);
+}
+
+.loading_state { text-align: center; padding: 50px; color: var(--text-secondary); font-size: 1.2rem; }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeIn 0.4s ease-out; }

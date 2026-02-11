@@ -4,8 +4,9 @@ import LoginPage from './pages/Login_Page';
 import Dashboard from './pages/Dashboard';
 import Zone from './pages/Zone';
 import CreateRound from './pages/CreateRound'; 
-import OperatorRounds from './pages/OperatorRounds'; // NOUVEAU IMPORT
+import OperatorRounds from './pages/OperatorRounds';
 import Apps from './pages/Apps';
+import ReportHistory from './pages/ReportHistory'; // NOUVEAU IMPORT
 import Alarms from './pages/Alarms';
 import Profile from './pages/Profile';
 import Sidebar from './components/Sidebar';
@@ -65,11 +66,11 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/zone" element={<Zone user={user} />} />
             <Route path="/create-round" element={<CreateRound user={user} />} />
-            
-            {/* NOUVELLE ROUTE OPÉRATEUR */}
             <Route path="/operator-rounds" element={<OperatorRounds user={user} />} />
-
             <Route path="/apps" element={<Apps user={user}/>} />
+            
+            {/* NOUVELLE ROUTE POUR L'HISTORIQUE */}
+            <Route path="/report-history" element={<ReportHistory user={user} />} />
             
             <Route path="/alarms" element={
               user.permissions.admin ? <Alarms /> : <Navigate to="/" />

@@ -1,21 +1,19 @@
 import React, { useState } from 'react';
-import { Users, Grid, Map as MapIcon, Settings } from 'lucide-react';
+import { Users, Grid, Map as MapIcon, Settings, ClipboardList } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import UserManagement from '../components/UserManagement';
 import Zooning from '../components/Zooning'; 
 import Equipements from '../components/Equipements'; 
 
 export default function Apps({ user }) {
+  const navigate = useNavigate();
   const [activeApp, setActiveApp] = useState(null);
 
   const SUPER_ADMIN_ID = 5;
   const ADMIN_ID = 4;
 
-  // Droits d'accès
-  // Equipements & Zooning : Admin (4) ou Super Admin (5)
   const canAccessEquip = user && (parseInt(user.role_id) === ADMIN_ID || parseInt(user.role_id) === SUPER_ADMIN_ID);
   const canAccessZooning = canAccessEquip; 
-  
-  // Users : Super Admin (5) uniquement
   const canAccessUsers = user && parseInt(user.role_id) === SUPER_ADMIN_ID;
 
   const cardStyle = {
@@ -58,15 +56,16 @@ export default function Apps({ user }) {
               </div>
             )}
 
-             <div style={{ padding: 20, border: '1px dashed var(--border-color)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-secondary)', minHeight: '140px' }}>
-                Bientôt...
-             </div>
+            {/* APP : HISTORIQUE RAPPORTS (NOUVEAU) */}
+            <div onClick={() => navigate('/report-history')} style={cardStyle} onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}>
+                <div style={iconBgStyle}><ClipboardList size={32} /></div>
+                <span style={{ fontWeight: '600', textAlign:'center' }}>Historique Rapports</span>
+            </div>
 
           </div>
         </div>
       )}
 
-      {/* GESTION DES VUES */}
       {activeApp === 'users' && <UserManagement currentUser={user} onClose={() => setActiveApp(null)} />}
       {activeApp === 'zooning' && <Zooning onClose={() => setActiveApp(null)} />}
       {activeApp === 'equipements' && <Equipements onClose={() => setActiveApp(null)} />}
