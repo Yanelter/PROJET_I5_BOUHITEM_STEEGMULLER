@@ -142,7 +142,7 @@ export default function Dashboard() {
                                     </div>
 
                                     <div className="chart_card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
-                                        <h3 style={{ width: '100%', justifyContent: 'center' }}>État du Parc</h3>
+                                        <h3 style={{ width: '100%', justifyContent: 'center' }}>État Actuel</h3>
                                         <div style={{ fontSize: '4rem', fontWeight: 'bold', color: data.alarms > 0 ? '#ef4444' : '#10b981' }}>
                                             {data.alarms === 0 ? "100%" : "ATTENTION"}
                                         </div>

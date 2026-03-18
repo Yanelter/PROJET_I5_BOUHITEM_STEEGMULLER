@@ -344,15 +344,30 @@ app.get('/rondes/:id/details', async (req, res) => {
         
         if (!ids || ids.length === 0) return res.json([]);
 
-        const query = `
-            SELECT t.id, t.name, t.zone, type.symbol, type.equipement_val
+        //const query = `
+          //  SELECT t.id, t.name, t.zone, type.symbol, type.equipement_val
+            //FROM equipements_terrain t
+            //JOIN type_equipements type ON t.type_equipements_id = type.id
+            //WHERE t.id IN (?)
+            //ORDER BY t.zone
+        //`;
+        //const [equipments] = await db.query(query, [ids]);
+        //res.json(equipments);
+
+const query = `
+            SELECT 
+                t.id, t.name, t.zone, t.x_axis, t.y_axis,
+                type.symbol, type.equipement_val,
+                p.img_link as plan_image
             FROM equipements_terrain t
             JOIN type_equipements type ON t.type_equipements_id = type.id
+            JOIN plans p ON t.plans_id = p.id
             WHERE t.id IN (?)
             ORDER BY t.zone
         `;
         const [equipments] = await db.query(query, [ids]);
         res.json(equipments);
+
     } catch (err) { 
         console.error(err);
         res.status(500).json({ error: "Erreur détails ronde" }); 

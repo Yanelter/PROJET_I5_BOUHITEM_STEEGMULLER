@@ -8,8 +8,9 @@ export default function OperatorRounds({ user }) {
     const [myRounds, setMyRounds] = useState([]);
     const [activeRound, setActiveRound] = useState(null);
     const [roundItems, setRoundItems] = useState([]);     
+    const [planImage, setPlanImage] = useState(null); 
     
-    // Structure modifiée : { equipId: { status: 'OK', value: '', comment: '' } }
+    // Structure : { equipId: { status: null, value: '', comment: '' } }
     const [answers, setAnswers] = useState({});
 
     useEffect(() => {
@@ -31,12 +32,16 @@ export default function OperatorRounds({ user }) {
                 setRoundItems(items);
                 setActiveRound(round);
                 
-                // Initialisation : Par défaut tout est "OK" (1)
+                if (items.length > 0 && items[0].plan_image) {
+                    setPlanImage(`${apiUrl}${items[0].plan_image}`);
+                }
+                
+                // Initialisation : Par défaut tout est VIDE (null)
                 const initAnswers = {};
                 items.forEach(i => {
                     initAnswers[i.id] = { 
-                        status: '1', // 1 = OK, 0 = NOK
-                        value: '',   // Pour l'analogique
+                        status: null, // null = Ni OK, ni NOK
+                        value: '',   
                         comment: '' 
                     };
                 });
@@ -53,12 +58,17 @@ export default function OperatorRounds({ user }) {
     };
 
     const handleSubmit = async () => {
-        // Validation simple : si analogique, valeur requise ? (Optionnel)
-        
+        // VÉRIFICATION : Est-ce qu'il reste des équipements non vérifiés (status === null) ?
+        const hasUnanswered = Object.values(answers).some(ans => ans.status === null);
+        if (hasUnanswered) {
+            alert("⚠️ Vous devez indiquer l'état (OK ou NOK) pour tous les équipements avant d'envoyer.");
+            return; // On bloque l'envoi
+        }
+
         const formattedReport = Object.keys(answers).map(key => ({
             id: key,
-            status: answers[key].status, // OK/NOK
-            value: answers[key].value,   // Valeur chiffrée (si existe)
+            status: answers[key].status,
+            value: answers[key].value,
             comment: answers[key].comment
         }));
 
@@ -77,6 +87,7 @@ export default function OperatorRounds({ user }) {
         if (res.ok) {
             alert("✅ Rapport envoyé avec succès !");
             setActiveRound(null);
+            setPlanImage(null); 
             fetchRounds();
         } else {
             alert("❌ Erreur lors de l'envoi.");
@@ -106,89 +117,121 @@ export default function OperatorRounds({ user }) {
         );
     }
 
-    // --- MODE EXECUTION ---
+    // --- MODE EXECUTION (SPLIT SCREEN) ---
     return (
-        <div className="op_container">
-            <div className="execution_header">
-                <button className="back_btn_simple" onClick={() => setActiveRound(null)}>
+        <div className="op_container execution_mode">
+            <div className="execution_header_fixed">
+                <button className="back_btn_simple" onClick={() => { setActiveRound(null); setPlanImage(null); }}>
                     <ArrowLeft size={20}/> Annuler
                 </button>
-                <h2>Exécution : {activeRound.name}</h2>
+                <h2>Ronde : {activeRound.name}</h2>
+                <button className="finalize_btn top_btn" onClick={handleSubmit}>
+                    <CheckCircle size={20}/> Envoyer
+                </button>
             </div>
 
-            <div className="questions_list">
-                {roundItems.map(item => {
-                    const isAnalog = item.equipement_val === 'analog';
-                    const currentStatus = answers[item.id]?.status;
+            <div className="execution_split">
+                
+                {/* PARTIE GAUCHE : QUESTIONS */}
+                <div className="questions_panel">
+                    {roundItems.map(item => {
+                        const isAnalog = item.equipement_val === 'analog';
+                        const currentStatus = answers[item.id]?.status;
 
-                    return (
-                        <div key={item.id} className={`question_card ${currentStatus === '0' ? 'status-nok' : ''}`}>
-                            <div className="q_info">
-                                <div>
-                                    <strong style={{fontSize: '1.1rem'}}>{item.name}</strong>
-                                    <div className="q_subtext">
-                                        {item.zone || 'Sans zone'} • {isAnalog ? 'Mesure Analogique' : 'Contrôle Binaire'}
+                        // Définition de la classe CSS de la carte selon le statut
+                        let cardClass = '';
+                        if (currentStatus === '1') cardClass = 'status-ok';
+                        if (currentStatus === '0') cardClass = 'status-nok';
+
+                        return (
+                            <div key={item.id} className={`question_card ${cardClass}`}>
+                                <div className="q_info">
+                                    <div>
+                                        <strong style={{fontSize: '1.1rem'}}>{item.name}</strong>
+                                        <div className="q_subtext">
+                                            {item.zone || 'Sans zone'} • {isAnalog ? 'Mesure Analogique' : 'Contrôle Binaire'}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            
-                            <div className="q_inputs_row">
                                 
-                                {/* 1. QUESTION COMMUNE : ÉTAT (OK/NOK) */}
-                                <div className="input_group_op">
-                                    <label>État de fonctionnement :</label>
-                                    <div className="toggle_status">
-                                        <button 
-                                            className={`status_btn ok ${currentStatus === '1' ? 'active' : ''}`}
-                                            onClick={() => handleInput(item.id, 'status', '1')}
-                                        >
-                                            <Check size={18}/> OK
-                                        </button>
-                                        <button 
-                                            className={`status_btn nok ${currentStatus === '0' ? 'active' : ''}`}
-                                            onClick={() => handleInput(item.id, 'status', '0')}
-                                        >
-                                            <AlertTriangle size={18}/> NOK
-                                        </button>
+                                <div className="q_inputs_row">
+                                    <div className="input_group_op">
+                                        <label>État :</label>
+                                        <div className="toggle_status">
+                                            <button 
+                                                className={`status_btn ok ${currentStatus === '1' ? 'active' : ''}`}
+                                                onClick={() => handleInput(item.id, 'status', '1')}
+                                            >
+                                                <Check size={18}/> OK
+                                            </button>
+                                            <button 
+                                                className={`status_btn nok ${currentStatus === '0' ? 'active' : ''}`}
+                                                onClick={() => handleInput(item.id, 'status', '0')}
+                                            >
+                                                <AlertTriangle size={18}/> NOK
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
 
-                                {/* 2. QUESTION ANALOGIQUE SEULEMENT : VALEUR */}
-                                {isAnalog && (
-                                    <div className="input_group_op fade-in">
-                                        <label>Valeur relevée :</label>
+                                    {isAnalog && (
+                                        <div className="input_group_op fade-in">
+                                            <label>Valeur relevée :</label>
+                                            <input 
+                                                type="number" step="0.1" placeholder="Ex: 24.5"
+                                                value={answers[item.id]?.value}
+                                                onChange={e => handleInput(item.id, 'value', e.target.value)}
+                                                className="main_input_op"
+                                            />
+                                        </div>
+                                    )}
+
+                                    <div className="input_group_op flex-grow">
+                                        <label>Note / Observation :</label>
                                         <input 
-                                            type="number" 
-                                            step="0.1"
-                                            placeholder="Ex: 24.5"
-                                            value={answers[item.id]?.value}
-                                            onChange={e => handleInput(item.id, 'value', e.target.value)}
-                                            className="main_input_op"
+                                            type="text" className="comment_input_op" placeholder="Optionnel..."
+                                            value={answers[item.id]?.comment}
+                                            onChange={e => handleInput(item.id, 'comment', e.target.value)}
                                         />
                                     </div>
-                                )}
-
-                                {/* 3. COMMENTAIRE (Toujours dispo) */}
-                                <div className="input_group_op flex-grow">
-                                    <label>Note / Observation :</label>
-                                    <input 
-                                        type="text" 
-                                        className="comment_input_op"
-                                        placeholder="Optionnel..."
-                                        value={answers[item.id]?.comment}
-                                        onChange={e => handleInput(item.id, 'comment', e.target.value)}
-                                    />
                                 </div>
                             </div>
-                        </div>
-                    );
-                })}
-            </div>
+                        );
+                    })}
+                </div>
 
-            <div className="submit_area">
-                <button className="finalize_btn" onClick={handleSubmit}>
-                    <CheckCircle size={20}/> Terminer et Envoyer
-                </button>
+                {/* PARTIE DROITE : PLAN INTERACTIF */}
+                <div className="plan_panel">
+                    <div className="plan_sticky_container">
+                        <h3>Localisation des équipements</h3>
+                        {planImage ? (
+                            <div className="plan_image_wrapper">
+                                <img src={planImage} alt="Plan" className="plan_img" />
+                                
+                                {roundItems.map(item => {
+                                    const status = answers[item.id]?.status;
+                                    
+                                    // Définition de la classe CSS du marqueur selon le statut
+                                    let markerClass = 'marker-neutral'; // Gris par défaut
+                                    if (status === '1') markerClass = 'marker-ok';
+                                    if (status === '0') markerClass = 'marker-nok';
+
+                                    return (
+                                        <div 
+                                            key={`marker-${item.id}`}
+                                            className={`plan_marker ${markerClass}`}
+                                            style={{ left: `${item.x_axis}%`, top: `${item.y_axis}%` }}
+                                        >
+                                            <span className="marker_tooltip">{item.name}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <p className="no_plan_text">Aucun plan associé.</p>
+                        )}
+                    </div>
+                </div>
+
             </div>
         </div>
     );
