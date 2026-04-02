@@ -4,12 +4,14 @@ import './OperatorRounds.css';
 
 export default function OperatorRounds({ user }) {
     const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-    
+   
     const [myRounds, setMyRounds] = useState([]);
     const [activeRound, setActiveRound] = useState(null);
-    const [roundItems, setRoundItems] = useState([]);     
-    const [planImage, setPlanImage] = useState(null); 
-    
+    const [roundItems, setRoundItems] = useState([]);    
+   
+    // NOUVEAU : On stocke les plans groupés au lieu d'une seule image
+    const [groupedPlans, setGroupedPlans] = useState([]);
+   
     // Structure : { equipId: { status: null, value: '', comment: '' } }
     const [answers, setAnswers] = useState({});
 
@@ -31,24 +33,43 @@ export default function OperatorRounds({ user }) {
                 const items = await res.json();
                 setRoundItems(items);
                 setActiveRound(round);
-                
-                if (items.length > 0 && items[0].plan_image) {
-                    setPlanImage(`${apiUrl}${items[0].plan_image}`);
-                }
-                
+               
+                // --- CORRECTION DU GROUPEMENT ---
+                const planGroups = {};
+               
+                items.forEach(item => {
+                    // On utilise l'image du plan comme clé unique et infaillible
+                    const planKey = item.plan_image;
+                   
+                    if (planKey) {
+                        if (!planGroups[planKey]) {
+                            planGroups[planKey] = {
+                                name: item.plan_name || 'Plan de la zone', // Nom par défaut si absent
+                                image: item.plan_image,
+                                equipments: []
+                            };
+                        }
+                        planGroups[planKey].equipments.push(item);
+                    }
+                });
+               
+                setGroupedPlans(Object.values(planGroups));
+                // ---------------------------------------------------
+               
                 // Initialisation : Par défaut tout est VIDE (null)
                 const initAnswers = {};
                 items.forEach(i => {
-                    initAnswers[i.id] = { 
-                        status: null, // null = Ni OK, ni NOK
-                        value: '',   
-                        comment: '' 
+                    initAnswers[i.id] = {
+                        status: null,
+                        value: '',  
+                        comment: ''
                     };
                 });
                 setAnswers(initAnswers);
             }
         } catch(e) { console.error(e); }
     };
+
 
     const handleInput = (id, field, val) => {
         setAnswers(prev => ({
@@ -87,7 +108,7 @@ export default function OperatorRounds({ user }) {
         if (res.ok) {
             alert("✅ Rapport envoyé avec succès !");
             setActiveRound(null);
-            setPlanImage(null); 
+            setGroupedPlans([]); // NOUVEAU : On reset les plans
             fetchRounds();
         } else {
             alert("❌ Erreur lors de l'envoi.");
@@ -121,7 +142,7 @@ export default function OperatorRounds({ user }) {
     return (
         <div className="op_container execution_mode">
             <div className="execution_header_fixed">
-                <button className="back_btn_simple" onClick={() => { setActiveRound(null); setPlanImage(null); }}>
+                <button className="back_btn_simple" onClick={() => { setActiveRound(null); setGroupedPlans([]); }}>
                     <ArrowLeft size={20}/> Annuler
                 </button>
                 <h2>Ronde : {activeRound.name}</h2>
@@ -131,7 +152,7 @@ export default function OperatorRounds({ user }) {
             </div>
 
             <div className="execution_split">
-                
+               
                 {/* PARTIE GAUCHE : QUESTIONS */}
                 <div className="questions_panel">
                     {roundItems.map(item => {
@@ -153,18 +174,18 @@ export default function OperatorRounds({ user }) {
                                         </div>
                                     </div>
                                 </div>
-                                
+                               
                                 <div className="q_inputs_row">
                                     <div className="input_group_op">
                                         <label>État :</label>
                                         <div className="toggle_status">
-                                            <button 
+                                            <button
                                                 className={`status_btn ok ${currentStatus === '1' ? 'active' : ''}`}
                                                 onClick={() => handleInput(item.id, 'status', '1')}
                                             >
                                                 <Check size={18}/> OK
                                             </button>
-                                            <button 
+                                            <button
                                                 className={`status_btn nok ${currentStatus === '0' ? 'active' : ''}`}
                                                 onClick={() => handleInput(item.id, 'status', '0')}
                                             >
@@ -176,7 +197,7 @@ export default function OperatorRounds({ user }) {
                                     {isAnalog && (
                                         <div className="input_group_op fade-in">
                                             <label>Valeur relevée :</label>
-                                            <input 
+                                            <input
                                                 type="number" step="0.1" placeholder="Ex: 24.5"
                                                 value={answers[item.id]?.value}
                                                 onChange={e => handleInput(item.id, 'value', e.target.value)}
@@ -187,7 +208,7 @@ export default function OperatorRounds({ user }) {
 
                                     <div className="input_group_op flex-grow">
                                         <label>Note / Observation :</label>
-                                        <input 
+                                        <input
                                             type="text" className="comment_input_op" placeholder="Optionnel..."
                                             value={answers[item.id]?.comment}
                                             onChange={e => handleInput(item.id, 'comment', e.target.value)}
@@ -199,33 +220,41 @@ export default function OperatorRounds({ user }) {
                     })}
                 </div>
 
-                {/* PARTIE DROITE : PLAN INTERACTIF */}
+                {/* --- NOUVELLE PARTIE DROITE : PLANS INTERACTIFS MULTIPLES --- */}
                 <div className="plan_panel">
-                    <div className="plan_sticky_container">
-                        <h3>Localisation des équipements</h3>
-                        {planImage ? (
-                            <div className="plan_image_wrapper">
-                                <img src={planImage} alt="Plan" className="plan_img" />
-                                
-                                {roundItems.map(item => {
-                                    const status = answers[item.id]?.status;
-                                    
-                                    // Définition de la classe CSS du marqueur selon le statut
-                                    let markerClass = 'marker-neutral'; // Gris par défaut
-                                    if (status === '1') markerClass = 'marker-ok';
-                                    if (status === '0') markerClass = 'marker-nok';
+                    <div className="plan_multi_container">
+                        <h3>Localisations</h3>
+                       
+                        {groupedPlans.length > 0 ? (
+                            groupedPlans.map((plan, index) => (
+                                <div key={index} className="plan_group_card">
+                                    {/* Titre du plan (ex: RDC) */}
+                                    <h4 className="plan_group_title">{plan.name}</h4>
+                                   
+                                    <div className="plan_image_wrapper">
+                                        <img src={`${apiUrl}${plan.image}`} alt={plan.name} className="plan_img" />
+                                       
+                                        {/* On dessine UNIQUEMENT les équipements de ce plan */}
+                                        {plan.equipments.map(item => {
+                                            const status = answers[item.id]?.status;
+                                           
+                                            let markerClass = 'marker-neutral';
+                                            if (status === '1') markerClass = 'marker-ok';
+                                            if (status === '0') markerClass = 'marker-nok';
 
-                                    return (
-                                        <div 
-                                            key={`marker-${item.id}`}
-                                            className={`plan_marker ${markerClass}`}
-                                            style={{ left: `${item.x_axis}%`, top: `${item.y_axis}%` }}
-                                        >
-                                            <span className="marker_tooltip">{item.name}</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
+                                            return (
+                                                <div
+                                                    key={`marker-${item.id}`}
+                                                    className={`plan_marker ${markerClass}`}
+                                                    style={{ left: `${item.x_axis}%`, top: `${item.y_axis}%` }}
+                                                >
+                                                    <span className="marker_tooltip">{item.name}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ))
                         ) : (
                             <p className="no_plan_text">Aucun plan associé.</p>
                         )}

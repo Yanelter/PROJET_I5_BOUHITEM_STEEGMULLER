@@ -9,9 +9,9 @@
 /* --- EXECUTION (SPLIT SCREEN) --- */
 .execution_mode { display: flex; flex-direction: column; height: 100vh; padding: 0; overflow: hidden; }
 
-.execution_header_fixed { 
+.execution_header_fixed {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 15px 25px; background: var(--bg-primary); 
+    padding: 15px 25px; background: var(--bg-primary);
     border-bottom: 1px solid var(--border-color); box-shadow: 0 2px 5px rgba(0,0,0,0.05);
     z-index: 10;
 }
@@ -34,8 +34,8 @@
 }
 
 /* CARTES QUESTIONS : GRIS PAR DÉFAUT */
-.question_card { 
-    background: var(--bg-primary); padding: 20px; border-radius: 10px; margin-bottom: 20px; 
+.question_card {
+    background: var(--bg-primary); padding: 20px; border-radius: 10px; margin-bottom: 20px;
     border-left: 5px solid #cbd5e1; /* Gris neutre */
     box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: border-color 0.3s;
 }
@@ -66,26 +66,49 @@
 .finalize_btn { background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s;}
 .finalize_btn:hover { background: #059669; }
 
-/* --- PANNEAU DROIT (PLAN) --- */
+/* --- PANNEAU DROIT (PLANS MULTIPLES) --- */
 .plan_panel {
-    width: 45%; 
+    width: 45%;
     min-width: 400px;
     background: #e2e8f0;
     border-left: 1px solid var(--border-color);
     padding: 20px;
-    overflow-y: auto;
+    overflow-y: auto; /* Permet le scroll de la zone droite */
 }
 
-.plan_sticky_container {
-    position: sticky;
-    top: 20px;
+/* Conteneur pour empiler les cartes de plans */
+.plan_multi_container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px; /* Espace vertical entre chaque carte de plan */
+    padding-bottom: 20px;
+}
+.plan_multi_container h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+    text-align: center;
+    color: #334155;
+}
+
+/* Carte individuelle d'un plan */
+.plan_group_card {
     background: var(--bg-primary);
-    padding: 15px;
+    padding: 20px;
     border-radius: 12px;
     box-shadow: var(--shadow);
 }
 
-.plan_sticky_container h3 { margin-top: 0; margin-bottom: 15px; font-size: 1.1rem; text-align: center;}
+.plan_group_title {
+    margin-top: 0;
+    margin-bottom: 15px;
+    text-align: center;
+    color: #1e293b;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+}
 
 .plan_image_wrapper {
     position: relative;
@@ -137,7 +160,7 @@
     font-size: 0.8rem;
     font-weight: bold;
     white-space: nowrap;
-    
+   
     position: absolute;
     bottom: 130%;
     left: 50%;
